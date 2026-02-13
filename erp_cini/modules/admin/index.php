@@ -263,9 +263,37 @@ try {
         XLSX.writeFile(wb, `auditoria_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
     
-    function saveUser(e) { 
-        e.preventDefault(); 
-        alert('Criar usuário em desenvolvimento'); 
+    function saveUser(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = Object.fromEntries(fd);
+
+        if (!data.name || !data.email || !data.password) {
+            alert('Preencha nome, email e senha');
+            return;
+        }
+
+        fetch('<?php echo BASE_URL; ?>/api/users_pro.php?action=user_create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); });
+            return response.json();
+        })
+        .then(r => {
+            if (r.success) {
+                alert('Usuário criado com sucesso');
+                location.reload();
+            } else {
+                alert('Erro: ' + (r.error || 'Resposta inválida'));
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao criar usuário:', err);
+            alert('Erro ao criar usuário: ' + err.message);
+        });
     }
     
     function editUser(id) { 

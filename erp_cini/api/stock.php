@@ -11,6 +11,17 @@ $conn = $db->getConnection();
 $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Normalize movement type to DB-expected values (accept accented 'saída')
+function normalizeMovementType($t) {
+    if (!$t) return 'entrada';
+    $t = mb_strtolower(trim($t));
+    $t = str_replace(['á','à','ã'], 'a', $t);
+    if (in_array($t, ['entrada','in'])) return 'entrada';
+    if (in_array($t, ['saida','saída','saida','out'])) return 'saida';
+    if (in_array($t, ['ajuste','adjust'])) return 'ajuste';
+    return 'entrada';
+}
+
 try {
     switch ($action) {
         case 'list_products':
@@ -36,13 +47,14 @@ try {
         case 'movement_create':
             if ($method !== 'POST') throw new Exception('Método não permitido');
             $data = json_decode(file_get_contents('php://input'), true);
+            $type = normalizeMovementType($data['type'] ?? 'entrada');
             $stmt = $conn->prepare("INSERT INTO stock_movements (product_id, type, quantity, reason, user_id, reference, responsible_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$data['product_id'] ?? 0, $data['type'] ?? 'entrada', $data['quantity'] ?? 0, $data['reason'] ?? '', $_SESSION['user_id'] ?? null, $data['reference'] ?? '', $data['responsible_id'] ?? null]);
+            $stmt->execute([$data['product_id'] ?? 0, $type, $data['quantity'] ?? 0, $data['reason'] ?? '', $_SESSION['user_id'] ?? null, $data['reference'] ?? '', $data['responsible_id'] ?? null]);
             
             $movement_id = $conn->lastInsertId();
             
             // Atualizar quantidade
-            $qty = $data['type'] === 'entrada' ? $data['quantity'] : -$data['quantity'];
+            $qty = $type === 'entrada' ? $data['quantity'] : -$data['quantity'];
             $conn->prepare("UPDATE stock_products SET quantity = quantity + ? WHERE id = ?")->execute([$qty, $data['product_id']]);
             
             // Notificar responsável

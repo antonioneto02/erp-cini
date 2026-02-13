@@ -295,7 +295,7 @@ try {
             dept: form.dept.value
         };
         
-        fetch('/api/users_pro.php?action=update_profile', {
+        fetch('<?php echo BASE_URL; ?>/api/users_pro.php?action=update_profile', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -325,7 +325,7 @@ try {
             new_password: form.new_password.value
         };
         
-        fetch('/api/users_pro.php?action=change_password', {
+        fetch('<?php echo BASE_URL; ?>/api/users_pro.php?action=change_password', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -402,7 +402,7 @@ try {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
         
-        fetch('/api/users_pro.php?action=upload_avatar', {
+        fetch('<?php echo BASE_URL; ?>/api/users_pro.php?action=upload_avatar', {
             method: 'POST',
             body: formData
         })

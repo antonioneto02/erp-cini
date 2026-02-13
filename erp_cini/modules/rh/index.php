@@ -21,6 +21,12 @@ try {
     ");
     $stats_query->execute();
     $stats = $stats_query->fetch();
+    // Ensure consistent stat keys used in different UI sections
+    $stats['pending'] = $stats['ferias_pendentes'] ?? $stats['pending'] ?? 0;
+    $stats['approved'] = $stats['ferias_aprovadas_ano'] ?? $stats['approved'] ?? 0;
+    $stats['total_users'] = $stats['total_colaboradores'] ?? $stats['total_users'] ?? 0;
+    // Current user's admin flag
+    $is_admin = $_SESSION['is_admin'] ?? false;
     
     // Dados para as abas
     $vacations = [];
@@ -43,6 +49,10 @@ try {
     }
 } catch (Exception $e) {
     $stats = ['total_colaboradores' => 0, 'ferias_pendentes' => 0, 'ferias_aprovadas_ano' => 0, 'ferias_mes' => 0];
+    $stats['pending'] = $stats['ferias_pendentes'];
+    $stats['approved'] = $stats['ferias_aprovadas_ano'];
+    $stats['total_users'] = $stats['total_colaboradores'];
+    $is_admin = $_SESSION['is_admin'] ?? false;
     $vacations = [];
     $users = [];
 }
@@ -435,8 +445,63 @@ try {
 <script>
     function showModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-    function saveVacation(e) { e.preventDefault(); const fd = new FormData(e.target); fetch('/api/rh.php?action=vacation_create', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(fd))}).then(r => r.json()).then(r => { if (r.success) { alert('Férias solicitadas!'); location.reload(); } }); }
-    function saveUser(e) { e.preventDefault(); alert('Criar usuário em desenvolvimento'); }
+    function saveVacation(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        fetch('<?php echo BASE_URL; ?>/api/rh.php?action=vacation_create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Object.fromEntries(fd))
+        })
+        .then(response => {
+            if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); });
+            return response.json();
+        })
+        .then(r => {
+            if (r.success) {
+                alert('Férias solicitadas!');
+                location.reload();
+            } else {
+                alert('Erro: ' + (r.error || 'Resposta inválida'));
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao solicitar férias:', err);
+            alert('Erro ao solicitar férias: ' + err.message);
+        });
+    }
+    function saveUser(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = Object.fromEntries(fd);
+
+        if (!data.name || !data.email || !data.password) {
+            alert('Preencha nome, email e senha');
+            return;
+        }
+
+        fetch('<?php echo BASE_URL; ?>/api/users_pro.php?action=user_create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); });
+            return response.json();
+        })
+        .then(r => {
+            if (r.success) {
+                alert('Usuário criado com sucesso');
+                location.reload();
+            } else {
+                alert('Erro: ' + (r.error || 'Resposta inválida'));
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao criar usuário:', err);
+            alert('Erro ao criar usuário: ' + err.message);
+        });
+    }
     document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); }); });
 </script>
 

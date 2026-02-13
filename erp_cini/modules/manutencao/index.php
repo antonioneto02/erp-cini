@@ -301,10 +301,58 @@ try {
 <script>
     function showModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-    function saveSchedule(e) { e.preventDefault(); const fd = new FormData(e.target); fetch('/api/maintenance.php?action=add_schedule', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(fd))}).then(r => r.json()).then(r => { if (r.success) { alert('Programação criada!'); location.reload(); } }); }
-    function saveEquipment(e) { e.preventDefault(); const fd = new FormData(e.target); fetch('/api/maintenance.php?action=add_equipment', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(fd))}).then(r => r.json()).then(r => { if (r.success) { alert('Equipamento cadastrado!'); location.reload(); } }); }
-    function saveExecution(e) { e.preventDefault(); const fd = new FormData(e.target); const data = Object.fromEntries(fd); data.start_date = new Date().toISOString(); fetch('/api/maintenance.php?action=add_execution', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)}).then(r => r.json()).then(r => { if (r.success) { alert('Manutenção registrada!'); location.reload(); } }); }
-    function finishExecution(id) { if (confirm('Finalizar?')) { fetch('/api/maintenance.php?action=update_execution_status', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, status: 'concluida'})}).then(r => r.json()).then(r => { if (r.success) location.reload(); }); } }
+    function saveSchedule(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        fetch('<?php echo BASE_URL; ?>/api/maintenance.php?action=add_schedule', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Object.fromEntries(fd))
+        })
+        .then(response => { if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); }); return response.json(); })
+        .then(r => { if (r.success) { alert('Programação criada!'); location.reload(); } else { alert('Erro: ' + (r.error || 'Resposta inválida')); } })
+        .catch(err => { console.error('Erro ao criar programação:', err); alert('Erro ao criar programação: ' + err.message); });
+    }
+
+    function saveEquipment(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        fetch('<?php echo BASE_URL; ?>/api/maintenance.php?action=add_equipment', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Object.fromEntries(fd))
+        })
+        .then(response => { if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); }); return response.json(); })
+        .then(r => { if (r.success) { alert('Equipamento cadastrado!'); location.reload(); } else { alert('Erro: ' + (r.error || 'Resposta inválida')); } })
+        .catch(err => { console.error('Erro ao cadastrar equipamento:', err); alert('Erro ao cadastrar equipamento: ' + err.message); });
+    }
+
+    function saveExecution(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = Object.fromEntries(fd);
+        data.start_date = new Date().toISOString();
+        fetch('<?php echo BASE_URL; ?>/api/maintenance.php?action=add_execution', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => { if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); }); return response.json(); })
+        .then(r => { if (r.success) { alert('Manutenção registrada!'); location.reload(); } else { alert('Erro: ' + (r.error || 'Resposta inválida')); } })
+        .catch(err => { console.error('Erro ao registrar manutenção:', err); alert('Erro ao registrar manutenção: ' + err.message); });
+    }
+
+    function finishExecution(id) {
+        if (!confirm('Finalizar?')) return;
+        fetch('<?php echo BASE_URL; ?>/api/maintenance.php?action=update_execution_status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id, status: 'concluida'})
+        })
+        .then(response => { if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); }); return response.json(); })
+        .then(r => { if (r.success) location.reload(); else alert('Erro: ' + (r.error || 'Resposta inválida')); })
+        .catch(err => { console.error('Erro ao finalizar execução:', err); alert('Erro ao finalizar execução: ' + err.message); });
+    }
     function editSchedule(id) { alert('Edição em desenvolvimento'); }
     function editEquipment(id) { alert('Edição em desenvolvimento'); }
     document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); }); });

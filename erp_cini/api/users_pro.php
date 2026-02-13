@@ -136,6 +136,73 @@ try {
             echo json_encode(['success' => true, 'message' => 'Avatar atualizado com sucesso', 'avatar_path' => $web_path]);
             break;
             
+        case 'user_create':
+            // Apenas admins podem criar novos usuários
+            if (empty($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
+                throw new Exception('Acesso negado: somente administradores podem criar usuários');
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!is_array($data)) throw new Exception('Dados inválidos');
+
+            // Normalizar e validar
+            $name = trim($data['name'] ?? '');
+            $email = strtolower(trim($data['email'] ?? ''));
+            $password = $data['password'] ?? '';
+            $dept = trim($data['dept'] ?? '');
+
+            if ($name === '' || $email === '' || $password === '') {
+                throw new Exception('Nome, email e senha são obrigatórios');
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Email inválido');
+            }
+
+            // Verificar se email já existe (comparando em lowercase)
+            $stmt = $conn->prepare("SELECT id FROM users WHERE LOWER(email) = ?");
+            $stmt->execute([$email]);
+            if ($stmt->rowCount() > 0) {
+                throw new Exception('Email já cadastrado');
+            }
+
+            // Inserir usuário (usar mesmo esquema de hash existente - md5)
+            $now = date('Y-m-d H:i:s');
+            $password_hash = md5($password);
+            $stmt = $conn->prepare("INSERT INTO users (name, email, dept, password, active, created_at) VALUES (?, ?, ?, ?, 1, ?)");
+            try {
+                $stmt->execute([
+                    htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+                    $email,
+                    htmlspecialchars($dept, ENT_QUOTES, 'UTF-8'),
+                    $password_hash,
+                    $now
+                ]);
+            } catch (PDOException $e) {
+                // SQLException pode ocorrer por UNIQUE constraint; retornar mensagem amigável
+                $msg = $e->getMessage();
+                if (stripos($msg, 'users.email') !== false || stripos($msg, 'UNIQUE') !== false) {
+                    throw new Exception('Email já cadastrado');
+                }
+                throw $e;
+            }
+            $new_id = $conn->lastInsertId();
+
+            // Atribuir role se fornecido
+            if (!empty($data['role_id'])) {
+                $role_id = (int)$data['role_id'];
+                // Inserir na tabela user_roles (se existir)
+                try {
+                    $stmt = $conn->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
+                    $stmt->execute([$new_id, $role_id]);
+                } catch (Exception $e) {
+                    // não falhar a criação por conta de problema com roles
+                }
+            }
+
+            AuthHelper::logActivity('users', $new_id, 'create', null, ['created' => $now]);
+
+            echo json_encode(['success' => true, 'id' => $new_id, 'message' => 'Usuário criado com sucesso']);
+            break;
         default:
             throw new Exception('Ação inválida');
     }

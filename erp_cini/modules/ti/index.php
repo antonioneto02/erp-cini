@@ -113,8 +113,37 @@ try {
 <script>
     function showModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-    function saveTicket(e) { e.preventDefault(); const fd = new FormData(e.target); fetch('/api/ti.php?action=ticket_create', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(fd))}).then(r => r.json()).then(r => { if (r.success) { alert('Chamado criado!'); location.reload(); } }); }
-    function saveAsset(e) { e.preventDefault(); const fd = new FormData(e.target); fetch('/api/ti.php?action=asset_create', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(fd))}).then(r => r.json()).then(r => { if (r.success) { alert('Ativo cadastrado!'); location.reload(); } }); }
+    function saveTicket(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        fetch('<?php echo BASE_URL; ?>/api/ti.php?action=ticket_create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Object.fromEntries(fd))
+        })
+        .then(response => {
+            if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); });
+            return response.json();
+        })
+        .then(r => { if (r.success) { alert('Chamado criado!'); location.reload(); } else { alert('Erro: ' + (r.error || 'Resposta inválida')); } })
+        .catch(err => { console.error('Erro ao criar chamado:', err); alert('Erro ao criar chamado: ' + err.message); });
+    }
+
+    function saveAsset(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        fetch('<?php echo BASE_URL; ?>/api/ti.php?action=asset_create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Object.fromEntries(fd))
+        })
+        .then(response => {
+            if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); });
+            return response.json();
+        })
+        .then(r => { if (r.success) { alert('Ativo cadastrado!'); location.reload(); } else { alert('Erro: ' + (r.error || 'Resposta inválida')); } })
+        .catch(err => { console.error('Erro ao cadastrar ativo:', err); alert('Erro ao cadastrar ativo: ' + err.message); });
+    }
     document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); }); });
 </script>
 

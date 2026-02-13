@@ -178,7 +178,7 @@ try {
     function savePlan(e) { 
         e.preventDefault(); 
         const fd = new FormData(e.target); 
-        fetch('/api/tasks_pro.php?action=plan_create', {
+        fetch('<?php echo BASE_URL; ?>/api/tasks_pro.php?action=plan_create', {
             method: 'POST', 
             headers: {'Content-Type': 'application/json'}, 
             body: JSON.stringify(Object.fromEntries(fd))
@@ -195,7 +195,7 @@ try {
     function saveTask(e) { 
         e.preventDefault(); 
         const fd = new FormData(e.target); 
-        fetch('/api/tasks_pro.php?action=task_create', {
+        fetch('<?php echo BASE_URL; ?>/api/tasks_pro.php?action=task_create', {
             method: 'POST', 
             headers: {'Content-Type': 'application/json'}, 
             body: JSON.stringify(Object.fromEntries(fd))

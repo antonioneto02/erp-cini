@@ -1,7 +1,7 @@
 <?php
 // Configurações gerais do sistema
 define('DB_PATH', __DIR__ . '/../db/database.sqlite');
-define('BASE_URL', '/analise-plano-acao');
+define('BASE_URL', '/erp_cini');
 define('SESSION_TIMEOUT', 3600); // 1 hora
 define('ENVIRONMENT', 'production');
 
@@ -25,7 +25,7 @@ header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-XSS-Protection: 1; mode=block');
 header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
-header('Content-Security-Policy: default-src \'self\'; script-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net; style-src \'self\' \'unsafe-inline\' https://cdn.jsdelivr.net; img-src \'self\' data:');
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; connect-src 'self' https://cdn.jsdelivr.net; img-src 'self' data:");
 
 // Carregar classes automaticamente
 require_once __DIR__ . '/../includes/Database.php';

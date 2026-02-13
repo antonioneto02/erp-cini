@@ -16,6 +16,36 @@ $conn = $db->getConnection();
 $user_id = $_SESSION['user_id'];
 $action = $_GET['action'] ?? $_POST['action'] ?? null;
 
+// Normalize priority values from UI (Portuguese) to DB-expected values (English)
+function normalizePriority($p) {
+    if (!$p) return 'medium';
+    $p = mb_strtolower(trim($p));
+    if (in_array($p, ['alta','high'])) return 'high';
+    if (in_array($p, ['média','media','médio','medio','medium'])) return 'medium';
+    if (in_array($p, ['baixa','low'])) return 'low';
+    return 'medium';
+}
+
+// Normalize plan status values (Portuguese -> DB English values)
+function normalizeStatus($s) {
+    if (!$s) return 'active';
+    $s = mb_strtolower(trim($s));
+    if (in_array($s, ['aberto','ativo','active','open'])) return 'active';
+    if (in_array($s, ['concluído','concluida','concluido','concluídos','concluidos','completed','concluded'])) return 'completed';
+    if (in_array($s, ['cancelado','cancelada','cancelled','canceled'])) return 'cancelled';
+    return 'active';
+}
+
+// Normalize task status values to match DB CHECK values (Portuguese with proper capitalization)
+function normalizeTaskStatus($s) {
+    if (!$s) return 'Pendente';
+    $s = mb_strtolower(trim($s));
+    if (in_array($s, ['pendente','pending','pend'])) return 'Pendente';
+    if (in_array($s, ['executando','executando','in progress','executing','execut'])) return 'Executando';
+    if (in_array($s, ['concluida','concluído','concluido','concluídos','concluidos','concluída','completed','done'])) return 'Concluída';
+    return 'Pendente';
+}
+
 try {
     switch ($action) {
         // ========== PLANOS ==========
@@ -44,11 +74,13 @@ try {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
+            $priority = normalizePriority($data['priority'] ?? null);
+            $status = normalizeStatus($data['status'] ?? null);
             $stmt->execute([
                 AuthHelper::sanitize($data['title']),
                 AuthHelper::sanitize($data['description'] ?? ''),
-                $data['priority'] ?? 'média',
-                $data['status'] ?? 'aberto',
+                $priority,
+                $status,
                 $data['start_date'],
                 $data['end_date'],
                 $user_id,
@@ -101,11 +133,11 @@ try {
             }
             if (isset($data['priority'])) {
                 $updates[] = "priority = ?";
-                $params[] = $data['priority'];
+                $params[] = normalizePriority($data['priority']);
             }
             if (isset($data['status'])) {
                 $updates[] = "status = ?";
-                $params[] = $data['status'];
+                $params[] = normalizeStatus($data['status']);
             }
             if (isset($data['start_date'])) {
                 $updates[] = "start_date = ?";
@@ -185,12 +217,13 @@ try {
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             
+            $taskStatus = normalizeTaskStatus($data['status'] ?? null);
             $stmt->execute([
                 $data['plan_id'],
                 AuthHelper::sanitize($data['description']),
                 $data['responsible_id'] ?? null,
                 $data['due_date'],
-                $data['status'] ?? 'pendente',
+                $taskStatus,
                 AuthHelper::sanitize($data['notes'] ?? '')
             ]);
             
@@ -231,7 +264,7 @@ try {
             }
             if (isset($data['status'])) {
                 $updates[] = "status = ?";
-                $params[] = $data['status'];
+                $params[] = normalizeTaskStatus($data['status']);
             }
             if (isset($data['responsible_id'])) {
                 $updates[] = "responsible_id = ?";
@@ -245,7 +278,8 @@ try {
                 $updates[] = "notes = ?";
                 $params[] = AuthHelper::sanitize($data['notes']);
             }
-            if (isset($data['completed_at']) && $data['status'] === 'concluída') {
+            // If request indicates completion, set completed_at timestamp.
+            if ((isset($data['completed_at']) && $data['completed_at']) || (isset($data['status']) && normalizeTaskStatus($data['status']) === 'Concluída')) {
                 $updates[] = "completed_at = ?";
                 $params[] = date('Y-m-d H:i:s');
             }

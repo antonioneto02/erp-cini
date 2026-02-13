@@ -111,8 +111,44 @@ try {
 <script>
     function showModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-    function saveProduct(e) { e.preventDefault(); const fd = new FormData(e.target); fetch('/api/stock.php?action=product_create', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(fd))}).then(r => r.json()).then(r => { if (r.success) { alert('Produto criado!'); location.reload(); } }); }
-    function saveMovement(e) { e.preventDefault(); const fd = new FormData(e.target); fetch('/api/stock.php?action=movement_create', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(fd))}).then(r => r.json()).then(r => { if (r.success) { alert('Movimentação registrada!'); location.reload(); } }); }
+    function saveProduct(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        fetch('<?php echo BASE_URL; ?>/api/stock.php?action=product_create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Object.fromEntries(fd))
+        })
+        .then(response => {
+            if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); });
+            return response.json();
+        })
+        .then(r => {
+            if (r.success) { alert('Produto criado!'); location.reload(); } else { alert('Erro: ' + (r.error || 'Resposta inválida')); }
+        })
+        .catch(err => { console.error('Erro ao criar produto:', err); alert('Erro ao criar produto: ' + err.message); });
+    }
+
+    function saveMovement(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        // normalize type (frontend-friendly value may include accent)
+        const data = Object.fromEntries(fd);
+        if (data.type) data.type = data.type.replace('á','a');
+        fetch('<?php echo BASE_URL; ?>/api/stock.php?action=movement_create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) return response.text().then(text => { throw new Error('HTTP ' + response.status + ': ' + text); });
+            return response.json();
+        })
+        .then(r => {
+            if (r.success) { alert('Movimentação registrada!'); location.reload(); } else { alert('Erro: ' + (r.error || 'Resposta inválida')); }
+        })
+        .catch(err => { console.error('Erro ao registrar movimentação:', err); alert('Erro ao registrar movimentação: ' + err.message); });
+    }
     document.querySelectorAll('.modal').forEach(m => { m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); }); });
 </script>
 

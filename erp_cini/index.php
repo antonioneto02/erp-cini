@@ -3,7 +3,7 @@ require_once 'config/config.php';
 
 // Se já tem sessão, redirecionar para dashboard
 if (isset($_SESSION['user_id'])) {
-    header('Location: /dashboard.php');
+    header('Location: /erp_cini/dashboard.php');
     exit;
 }
 
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($email && $password) {
         // Conectar ao banco
-        require_once 'includes/Database.php';
+        require_once 'includes/erp_cin/iDatabase.php';
         $db = Database::getInstance();
         $conn = $db->getConnection();
 
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['is_admin'] = ($user['role'] === 'admin');
             $_SESSION['user_dept'] = $user['dept'];
 
-            header('Location: /dashboard.php');
+            header('Location: /erp_cini/dashboard.php');
             exit;
         } else {
             $error = 'Email ou senha inválidos';
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | ERP CINI</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="erp_cini/assets/styles.css">
     <style>
         body {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);

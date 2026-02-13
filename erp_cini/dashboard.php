@@ -1,6 +1,6 @@
 <?php
 require_once 'config/config.php';
-$page_title = 'Dashboard';
+$page_title = 'erp_cini/Dashboard';
 require_once 'includes/header.php';
 require_once 'includes/sidebar.php';
 require_once 'includes/Database.php';
@@ -144,13 +144,13 @@ try {
                 <div class="card-header">Atalhos Rápidos</div>
                 <div class="card-body">
                     <div class="flex gap-20" style="flex-direction: column;">
-                        <a href="/modules/projetos/index.php?s=planos" class="btn btn-primary" style="text-decoration: none;">
+                        <a href="/erp_cini/modules/projetos/index.php?s=planos" class="btn btn-primary" style="text-decoration: none;">
                             <i class="bi bi-plus-circle"></i> Novo Plano
                         </a>
-                        <a href="/modules/ti/index.php?s=chamados" class="btn btn-secondary" style="text-decoration: none;">
+                        <a href="/erp_cini/modules/ti/index.php?s=chamados" class="btn btn-secondary" style="text-decoration: none;">
                             <i class="bi bi-ticket-detailed"></i> Novo Chamado
                         </a>
-                        <a href="/modules/estoque/index.php?s=produtos" class="btn btn-secondary" style="text-decoration: none;">
+                        <a href="/erp_cini/modules/estoque/index.php?s=produtos" class="btn btn-secondary" style="text-decoration: none;">
                             <i class="bi bi-box"></i> Consultar Estoque
                         </a>
                     </div>

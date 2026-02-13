@@ -4,7 +4,7 @@
     </div> <!-- main-content -->
     </div> <!-- layout-container -->
 
-    <script src="/assets/app.js"></script>
+    <script src="<?php echo BASE_URL; ?>/assets/app.js"></script>
     <script>
         // Inicializar tema e recursos globais
         document.addEventListener('DOMContentLoaded', function() {
